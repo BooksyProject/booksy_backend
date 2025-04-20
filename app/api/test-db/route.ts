@@ -1,6 +1,5 @@
-// app/api/test-db/route.ts
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongoose"; // đường dẫn tuỳ theo cấu trúc dự án của bạn
+import { connectToDatabase } from "@/lib/mongoose";
 
 export async function GET() {
   try {
