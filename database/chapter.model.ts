@@ -17,7 +17,5 @@ const ChapterSchema = new Schema<IChapter>({
   uploadedAt: { type: Date, default: Date.now },
 });
 
-ChapterSchema.add(AuditSchema);
-
 const Chapter = models.Chapter || model("Chapter", ChapterSchema);
 export default Chapter;
