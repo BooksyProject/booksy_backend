@@ -1,3 +1,5 @@
+import { Schema } from "mongoose";
+
 export interface UserRegisterDTO {
   firstName: string;
   lastName: string;
@@ -7,6 +9,18 @@ export interface UserRegisterDTO {
   password: string;
   rePassword: string;
   gender: boolean;
+}
+
+export interface UserResponseDTO {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  phoneNumber: string;
+  avatar: string;
+  email: string;
+  gender: boolean;
+  likedBookIds: Schema.Types.ObjectId[];
 }
 
 export interface UserLoginDTO {
