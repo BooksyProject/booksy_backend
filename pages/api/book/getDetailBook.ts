@@ -1,4 +1,4 @@
-import { getChaptersByBook } from "@/lib/actions/chapter.action";
+import { getBookDetail } from "@/lib/actions/book.action";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -12,8 +12,8 @@ export default async function handler(
     return res.status(400).json({ error: "Missing bookId" });
 
   try {
-    const chapters = await getChaptersByBook(bookId);
-    return res.status(200).json(chapters);
+    const bookDetail = await getBookDetail(bookId);
+    return res.status(200).json(bookDetail);
   } catch (err) {
     return res.status(500).json({ error: "Failed to fetch chapters" });
   }
