@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { connectToDatabase } from "../mongoose";
 import book from "@/database/book.model";
-import { BookDTO, CreateBookDTO } from "@/dtos/BookDTO";
+import { BookDTO, BookResponseDTO, CreateBookDTO } from "@/dtos/BookDTO";
 import Book from "@/database/book.model";
 import Category from "@/database/category.model";
 import Chapter from "@/database/chapter.model";
@@ -32,6 +32,31 @@ export async function createBook(params: CreateBookDTO): Promise<BookDTO> {
   }
 }
 
+export async function getAllBooks(): Promise<BookResponseDTO[]> {
+  try {
+    await connectToDatabase();
+
+    const books = await Book.find().lean();
+
+    const formattedBooks: BookResponseDTO[] = books.map((book: any) => ({
+      title: book.title,
+      author: book.author,
+      categories: book.categories,
+      description: book.description,
+      coverImage: book.coverImage,
+      fileURL: book.fileURL,
+      fileType: book.fileType,
+      views: book.views,
+      likes: book.likes,
+      uploadedAt: book.uploadedAt,
+    }));
+
+    return formattedBooks;
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    throw new Error("Error fetching books: " + error);
+  }
+}
 export async function getBookDetail(bookId: string) {
   await connectToDatabase();
   const bookDetail = await Book.findById(bookId).populate({
