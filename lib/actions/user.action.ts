@@ -7,10 +7,10 @@ const saltRounds = 10;
 
 export async function createUser(
   params: UserRegisterDTO,
-  createBy: Schema.Types.ObjectId | undefined
-) {
+  createBy?: Schema.Types.ObjectId
+): Promise<UserResponseDTO> {
   try {
-    connectToDatabase();
+    await connectToDatabase();
 
     const existedUser = await User.findOne({
       $or: [
@@ -19,32 +19,31 @@ export async function createUser(
       ],
     });
 
-    if (params.password !== params.rePassword) {
-      throw new Error("Your re-password is wrong!");
-    }
-
     if (existedUser) {
-      throw new Error("User is already exist!");
+      throw new Error("User already exists!");
     }
 
-    const hashPassword = await bcrypt.hash(params.password, saltRounds);
+    if (params.password !== params.rePassword) {
+      throw new Error("Re-password does not match!");
+    }
 
-    const { rePassword, password, ...userData } = params;
+    const hashedPassword = await bcrypt.hash(params.password, saltRounds);
 
-    const createUserData = Object.assign({}, userData, {
-      password: hashPassword,
-      attendDate: new Date(),
-      roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
-      status: false,
-    });
+    const { password, rePassword, ...rest } = params;
 
-    const newUser = await User.create(createUserData);
+    const userData = {
+      ...rest,
+      password: hashedPassword,
+      createBy: createBy ?? new mongoose.Types.ObjectId(), // dùng AuditSchema
+    };
+
+    const newUser = await User.create(userData);
+
     const result: UserResponseDTO = {
       _id: newUser._id.toString(),
       firstName: newUser.firstName,
       lastName: newUser.lastName,
-      username: newUser.nickName,
+      username: newUser.username,
       phoneNumber: newUser.phoneNumber,
       email: newUser.email,
       avatar: newUser.avatar,
@@ -53,7 +52,8 @@ export async function createUser(
     };
 
     return result;
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    console.error("Error creating user:", error);
+    throw new Error(error.message || "Internal Server Error");
   }
 }
