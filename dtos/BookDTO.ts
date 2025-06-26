@@ -22,6 +22,7 @@ export interface CreateBookDTO {
 }
 
 export interface BookResponseDTO {
+  _id: string;
   title: string;
   author: string;
   categories: string[];
