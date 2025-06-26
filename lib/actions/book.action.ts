@@ -39,6 +39,7 @@ export async function getAllBooks(): Promise<BookResponseDTO[]> {
     const books = await Book.find().lean();
 
     const formattedBooks: BookResponseDTO[] = books.map((book: any) => ({
+      _id: book._id,
       title: book.title,
       author: book.author,
       categories: book.categories,

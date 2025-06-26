@@ -32,6 +32,7 @@ export async function getAllCategories(): Promise<CategoryResponseDTO[]> {
     const categories = await Category.find().sort({ uploadedAt: -1 }).lean();
 
     return categories.map((category: any) => ({
+      _id: category._id,
       name: category.name,
       description: category.description,
       uploadedAt: category.uploadedAt,
