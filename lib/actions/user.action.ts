@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcryptjs";
+import { createSetting } from "./setting.action";
 const saltRounds = 10;
 
 export async function createUser(
@@ -38,6 +39,14 @@ export async function createUser(
     };
 
     const newUser = await User.create(userData);
+
+    await createSetting({
+      userId: newUser._id.toString(),
+      fontSize: 16,
+      fontFamily: "Arial",
+      Theme: "light",
+      lineSpacing: 1.5,
+    });
 
     const result: UserResponseDTO = {
       _id: newUser._id.toString(),
