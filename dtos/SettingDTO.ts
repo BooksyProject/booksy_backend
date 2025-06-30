@@ -1,16 +1,16 @@
 export interface CreateSettingDTO {
   userId: string;
-  fontSize: number;
+  fontSize: boolean;
   fontFamily: string;
-  Theme: string;
+  Theme: boolean;
   lineSpacing: number;
 }
 
 export interface SettingResponseDTO {
   _id: string;
   userId: string;
-  fontSize: number;
+  fontSize: boolean;
   fontFamily: string;
-  Theme: string;
+  Theme: boolean;
   lineSpacing: number;
 }

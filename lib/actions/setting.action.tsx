@@ -11,10 +11,10 @@ export async function createSetting(params: CreateSettingDTO) {
 export async function updateSetting(
   userId: string,
   updatedFields: Partial<{
-    fontSize: string;
+    fontSize: boolean; // ✅ boolean
     fontFamily: string;
-    Theme: string;
-    lineSpacing: string;
+    Theme: boolean;
+    lineSpacing: number; // ✅ number
   }>
 ): Promise<SettingResponseDTO | null> {
   try {
@@ -30,5 +30,31 @@ export async function updateSetting(
   } catch (error) {
     console.error("Error updating setting:", error);
     throw new Error("Error updating setting: " + error);
+  }
+}
+
+export async function getSettingByUserId(
+  userId: string
+): Promise<SettingResponseDTO | null> {
+  try {
+    await connectToDatabase();
+
+    const setting = await Setting.findOne({ userId });
+
+    if (!setting) return null;
+
+    const result: SettingResponseDTO = {
+      _id: setting._id?.toString() || "",
+      userId: setting.userId?.toString() || "",
+      fontSize: setting.fontSize, // boolean
+      fontFamily: setting.fontFamily,
+      Theme: setting.Theme,
+      lineSpacing: setting.lineSpacing, // number
+    };
+
+    return result;
+  } catch (error) {
+    console.error("Error getting setting:", error);
+    throw new Error("Failed to get setting");
   }
 }

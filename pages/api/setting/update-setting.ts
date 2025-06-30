@@ -8,7 +8,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   await corsMiddleware(req, res, async () => {
-    if (req.method === "PUT") {
+    if (req.method === "PATCH") {
       try {
         const { userId, fontSize, fontFamily, Theme, lineSpacing } = req.body;
 
@@ -18,13 +18,15 @@ export default async function handler(
 
         const updatedFields: Record<string, any> = {};
 
-        if (fontSize) updatedFields.fontSize = fontSize;
-        if (fontFamily) updatedFields.fontFamily = fontFamily;
-        if (Theme) updatedFields.Theme = Theme;
-        if (lineSpacing) updatedFields.lineSpacing = lineSpacing;
+        if (typeof fontSize === "boolean") updatedFields.fontSize = fontSize;
+        if (typeof fontFamily === "string")
+          updatedFields.fontFamily = fontFamily;
+        if (typeof Theme === "boolean") updatedFields.Theme = Theme;
+        if (typeof lineSpacing === "number")
+          updatedFields.lineSpacing = lineSpacing;
 
         if (Object.keys(updatedFields).length === 0) {
-          return res.status(400).json({ message: "No fields to update" });
+          return res.status(400).json({ message: "No valid fields to update" });
         }
 
         const setting = await updateSetting(userId, updatedFields);
@@ -33,9 +35,7 @@ export default async function handler(
           return res.status(404).json({ message: "Setting not found" });
         }
 
-        return res
-          .status(200)
-          .json({ message: "Setting updated successfully", setting });
+        return res.status(200).json(setting);
       } catch (error: any) {
         return res
           .status(500)

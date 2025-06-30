@@ -42,9 +42,9 @@ export async function createUser(
 
     await createSetting({
       userId: newUser._id.toString(),
-      fontSize: 16,
+      fontSize: false,
       fontFamily: "Arial",
-      Theme: "light",
+      Theme: true,
       lineSpacing: 1.5,
     });
 
@@ -64,5 +64,32 @@ export async function createUser(
   } catch (error: any) {
     console.error("Error creating user:", error);
     throw new Error(error.message || "Internal Server Error");
+  }
+}
+
+export async function getMyProfile(id: String | undefined) {
+  try {
+    connectToDatabase();
+    const myProfile = await User.findById(id);
+    if (!myProfile) {
+      console.log(`Cannot get ${id} profile now`);
+      throw new Error(`Cannot get ${id} profile now`);
+    }
+    const result: UserResponseDTO = {
+      _id: myProfile._id.toString(),
+      firstName: myProfile.firstName,
+      lastName: myProfile.lastName,
+      username: myProfile.username,
+      phoneNumber: myProfile.phoneNumber,
+      email: myProfile.email,
+      avatar: myProfile.avatar,
+      gender: myProfile.gender,
+      likedBookIds: [],
+    };
+
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }
