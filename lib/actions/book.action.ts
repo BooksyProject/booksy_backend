@@ -270,35 +270,44 @@ export async function downloadBook(bookId: string) {
   }
 }
 
-export const getLikedBooks = async (userId: string): Promise<BookDTO[]> => {
+export const getLikedBooks = async (
+  userId: string
+): Promise<(BookResponseDTO & { totalChapters: number })[]> => {
   try {
-    // Tìm người dùng trong cơ sở dữ liệu
-    const user = await User.findById(userId).populate("likedBookIds"); // Populate likedBookIds với thông tin sách
+    // Lấy user và populate sách đã thích
+    const user = await User.findById(userId).populate("likedBookIds");
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Lọc thông tin sách yêu thích từ likedBookIds
-    const likedBooks: BookResponseDTO[] = user.likedBookIds.map(
-      (book: any) => ({
-        _id: book._id,
-        title: book.title,
-        author: book.author,
-        categories: book.categories,
-        description: book.description,
-        coverImage: book.coverImage,
-        fileURL: book.fileURL,
-        fileType: book.fileType,
-        views: book.views,
-        likes: book.likes,
-        uploadedAt: book.uploadedAt,
+    // Với mỗi sách đã thích, lấy thêm tổng số chương
+    const likedBooksWithChapters = await Promise.all(
+      user.likedBookIds.map(async (book: any) => {
+        const totalChapters = await Chapter.countDocuments({
+          bookId: book._id,
+        });
+
+        return {
+          _id: book._id,
+          title: book.title,
+          author: book.author,
+          categories: book.categories,
+          description: book.description,
+          coverImage: book.coverImage,
+          fileURL: book.fileURL,
+          fileType: book.fileType,
+          views: book.views,
+          likes: book.likes,
+          uploadedAt: book.uploadedAt,
+          totalChapters,
+        };
       })
     );
 
-    return likedBooks; // Trả về mảng các sách yêu thích
+    return likedBooksWithChapters;
   } catch (error) {
-    console.error("Error fetching liked books:", error);
+    console.error("❌ Error fetching liked books:", error);
     throw new Error("Unable to fetch liked books");
   }
 };
