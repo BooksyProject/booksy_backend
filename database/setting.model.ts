@@ -3,7 +3,7 @@ import { IAudit, AuditSchema } from "./audit.model";
 
 export interface ISetting extends Document, IAudit {
   userId: Schema.Types.ObjectId;
-  fontSize: number;
+  fontSize: boolean;
   fontFamily: string;
   Theme: boolean;
   lineSpacing: number;
@@ -11,7 +11,7 @@ export interface ISetting extends Document, IAudit {
 
 const SettingSchema = new Schema<ISetting>({
   userId: { type: Schema.Types.ObjectId, required: true },
-  fontSize: { type: Number, required: true },
+  fontSize: { type: Boolean, required: true },
   fontFamily: { type: String, required: true },
   Theme: { type: Boolean, required: true },
   lineSpacing: { type: Number, required: true },

@@ -56,7 +56,7 @@ export function authorizeRole(roles: string[]) {
   };
 }
 const cors = Cors({
-  methods: ["GET", "POST", "PATCH", "HEAD", "DELETE"],
+  methods: ["GET", "POST", "PATCH", "HEAD", "DELETE", "PUT"],
   origin: "*",
 });
 

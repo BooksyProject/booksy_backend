@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcryptjs";
+import { createSetting } from "./setting.action";
 const saltRounds = 10;
 
 export async function createUser(
@@ -39,6 +40,14 @@ export async function createUser(
 
     const newUser = await User.create(userData);
 
+    await createSetting({
+      userId: newUser._id.toString(),
+      fontSize: false,
+      fontFamily: "Arial",
+      Theme: true,
+      lineSpacing: 1.5,
+    });
+
     const result: UserResponseDTO = {
       _id: newUser._id.toString(),
       firstName: newUser.firstName,
@@ -55,5 +64,32 @@ export async function createUser(
   } catch (error: any) {
     console.error("Error creating user:", error);
     throw new Error(error.message || "Internal Server Error");
+  }
+}
+
+export async function getMyProfile(id: String | undefined) {
+  try {
+    connectToDatabase();
+    const myProfile = await User.findById(id);
+    if (!myProfile) {
+      console.log(`Cannot get ${id} profile now`);
+      throw new Error(`Cannot get ${id} profile now`);
+    }
+    const result: UserResponseDTO = {
+      _id: myProfile._id.toString(),
+      firstName: myProfile.firstName,
+      lastName: myProfile.lastName,
+      username: myProfile.username,
+      phoneNumber: myProfile.phoneNumber,
+      email: myProfile.email,
+      avatar: myProfile.avatar,
+      gender: myProfile.gender,
+      likedBookIds: [],
+    };
+
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }
