@@ -11,8 +11,8 @@ async function run() {
 
   await connectToDatabase();
 
-  const bookId = "681e0db975db5dcb5e68ac6a";
-  const epubFilePath = "public/book/hemingway-in-our-time.epub";
+  const bookId = "68582b6723a912623fc8666f";
+  const epubFilePath = "public/book/fitzgerald-great-gatsby.epub";
 
   const chapters = await extractChaptersFromEPUB(epubFilePath);
 
