@@ -40,11 +40,10 @@ interface GetReadingProgressParams {
   bookId: string;
 }
 
-export async function getReadingProgress(bookId: string, userId?: string) {
+export async function getReadingProgress(bookId: string, userId: string) {
   await connectToDatabase();
 
-  // Nếu chưa có user thì dùng userId giả lập (trong dev)
-  const resolvedUserId = userId || "6629aabbcc11223344556677";
+  const resolvedUserId = userId;
 
   const progress = await ReadingProgress.findOne({
     bookId,
