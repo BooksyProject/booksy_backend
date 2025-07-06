@@ -34,3 +34,16 @@ export interface BookResponseDTO {
   likes: number;
   uploadedAt: Date;
 }
+
+export interface BookmarkDTO {
+  chapterId: string;
+  position: number;
+  note?: string;
+  createdAt?: Date;
+}
+
+export interface ReadingProgressResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
+}

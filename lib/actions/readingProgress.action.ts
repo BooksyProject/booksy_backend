@@ -58,3 +58,51 @@ export async function getReadingProgress(bookId: string, userId: string) {
     percentage: progress.percentage,
   };
 }
+
+export async function updateReadingPosition(
+  bookId: string,
+  chapterId: string,
+  position: number,
+  userId: string
+) {
+  try {
+    await connectToDatabase();
+
+    // Validate input
+    if (!bookId || !chapterId || position === undefined || !userId) {
+      throw new Error("Missing required fields");
+    }
+
+    if (position < 0 || position > 1) {
+      throw new Error("Position must be between 0 and 1");
+    }
+
+    const updatedProgress = await ReadingProgress.findOneAndUpdate(
+      { userId, bookId },
+      {
+        $set: {
+          chapterId,
+          currentPosition: position,
+          lastReadAt: new Date(),
+        },
+      },
+      { new: true, upsert: true }
+    ).populate("chapterId");
+
+    return {
+      success: true,
+      data: {
+        chapterId: updatedProgress.chapterId,
+        currentPosition: updatedProgress.currentPosition,
+        lastReadAt: updatedProgress.lastReadAt,
+      },
+    };
+  } catch (error) {
+    console.error("Error updating reading position:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
