@@ -17,6 +17,8 @@ export interface IReadingProgress extends Document {
     chapterId: Schema.Types.ObjectId;
     position: number;
     note?: string;
+    index?: { type: Number };
+
     createdAt: Date;
   }>;
   notes: Array<{
@@ -44,6 +46,7 @@ const ReadingProgressSchema = new Schema<IReadingProgress>({
       chapterId: { type: Schema.Types.ObjectId, ref: "Chapter" },
       position: { type: Number },
       note: { type: String },
+      index: { type: Number },
       createdAt: { type: Date, default: Date.now },
     },
   ],

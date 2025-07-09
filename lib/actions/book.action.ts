@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 import { connectToDatabase } from "../mongoose";
 import book from "@/database/book.model";
-import { BookDTO, BookResponseDTO, CreateBookDTO } from "@/dtos/BookDTO";
+import {
+  BookDTO,
+  BookResponseDTO,
+  CreateBookDTO,
+  ReadingProgressResponse,
+} from "@/dtos/BookDTO";
 import Book from "@/database/book.model";
 import Category from "@/database/category.model";
 import Chapter from "@/database/chapter.model";
@@ -12,6 +17,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import path from "path";
 import fs from "fs";
 import UserDownload from "@/database/download.model";
+import ReadingProgress from "@/database/readingProgress.model";
 
 export async function createBook(params: CreateBookDTO): Promise<BookDTO> {
   try {
@@ -517,4 +523,104 @@ export async function deleteDownloadedBook(userId: string, bookId: string) {
   );
 
   return result;
+}
+
+export async function addBookmark(
+  userId: string,
+  bookId: string,
+  chapterId: string,
+  position: number,
+  note?: string,
+  index?: number
+): Promise<ReadingProgressResponse> {
+  try {
+    await connectToDatabase();
+
+    // Validate chapter exists
+    const chapterExists = await Chapter.findById(chapterId);
+    if (!chapterExists) {
+      return { success: false, message: "Chapter not found" };
+    }
+
+    const progress = await ReadingProgress.findOneAndUpdate(
+      { userId, bookId },
+      {
+        $push: {
+          bookmarks: {
+            chapterId,
+            position,
+            note,
+            index,
+        
+          },
+        },
+        $set: { lastReadAt: new Date() },
+      },
+      { new: true, upsert: true }
+    ).populate("bookmarks.chapterId");
+
+    return {
+      success: true,
+      data: progress.bookmarks[progress.bookmarks.length - 1],
+    };
+  } catch (error) {
+    console.error("Error adding bookmark:", error);
+    return { success: false, message: "Failed to add bookmark" };
+  }
+}
+
+export async function getBookmarks(
+  userId: string,
+  bookId: string
+): Promise<ReadingProgressResponse> {
+  try {
+    await connectToDatabase();
+
+    const progress = await ReadingProgress.findOne(
+      { userId, bookId },
+      { bookmarks: 1 }
+    )
+      .populate("bookmarks.chapterId")
+      .sort({ "bookmarks.createdAt": -1 });
+
+    if (!progress) {
+      return { success: true, data: [] };
+    }
+
+    return { success: true, data: progress.bookmarks };
+  } catch (error) {
+    console.error("Error fetching bookmarks:", error);
+    return { success: false, message: "Failed to fetch bookmarks" };
+  }
+}
+
+export async function removeBookmark(
+  userId: string,
+  bookId: string,
+  chapterId: string,
+  position: number
+): Promise<ReadingProgressResponse> {
+  try {
+    await connectToDatabase();
+
+    const progress = await ReadingProgress.findOneAndUpdate(
+      { userId, bookId },
+      {
+        $pull: {
+          bookmarks: {
+            chapterId,
+            position,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    console.log("xoa thanh cong");
+
+    return { success: true, data: progress };
+  } catch (error) {
+    console.error("Error removing bookmark:", error);
+    return { success: false, message: "Failed to remove bookmark" };
+  }
 }
