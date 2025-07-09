@@ -7,6 +7,7 @@ export interface IChapter extends Document, IAudit {
   chapterTitle: string;
   content: string;
   uploadedAt: Date;
+  comments: Schema.Types.ObjectId[];
 }
 
 const ChapterSchema = new Schema<IChapter>({
@@ -15,6 +16,7 @@ const ChapterSchema = new Schema<IChapter>({
   chapterTitle: { type: String, required: true },
   content: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now },
+  comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
 });
 
 const Chapter = models.Chapter || model("Chapter", ChapterSchema);

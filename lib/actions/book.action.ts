@@ -24,15 +24,84 @@ export async function createBook(params: CreateBookDTO): Promise<BookDTO> {
       coverImage: params.coverImage,
       fileURL: params.fileURL,
       fileType: params.fileType,
+      createdBy: params.createdBy,
     };
 
-    // Tạo báo cáo mới trong DB
     const newBook = await Book.create(bookData);
 
     return newBook as BookDTO;
   } catch (error) {
     console.error("Error creating book:", error);
     throw new Error("Error creating book: " + error);
+  }
+}
+
+export async function updateBook(
+  bookId: string,
+  updateData: Partial<CreateBookDTO>,
+  userId: string // thêm userId ở đây
+) {
+  try {
+    await connectToDatabase();
+
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      throw new Error(`Book with ID ${bookId} does not exist.`);
+    }
+
+    if (book.createdBy.toString() !== userId) {
+      throw new Error("You do not have permission to update this book.");
+    }
+
+    book.title = updateData.title || book.title;
+    book.author = updateData.author || book.author;
+    book.categories = updateData.categories || book.categories;
+    book.description = updateData.description || book.description;
+    book.coverImage = updateData.coverImage || book.coverImage;
+    book.fileURL = updateData.fileURL || book.fileURL;
+    book.fileType = updateData.fileType || book.fileType;
+
+    const updatedBook = await book.save();
+    const populatedBook = await Book.findById(updatedBook._id)
+      .populate({
+        path: "createdBy",
+        model: User,
+        select: "_id firstName lastName avatar",
+      })
+      .populate({
+        path: "categories",
+        model: Category,
+        select: "_id name",
+      });
+
+    return populatedBook;
+  } catch (error) {
+    console.error("❌ Error updating book:", error);
+    throw new Error("Unable to update book");
+  }
+}
+
+export async function deleteBook(
+  bookId: string,
+  userId: string
+): Promise<{ success: boolean }> {
+  try {
+    await connectToDatabase();
+
+    const deleted = await Book.findOneAndDelete({
+      _id: bookId,
+      createdBy: userId,
+    });
+
+    if (!deleted) {
+      throw new Error("Book not found or you don't have permission");
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Error deleting book:", error);
+    throw new Error("Unable to delete book");
   }
 }
 
@@ -54,6 +123,7 @@ export async function getAllBooks(): Promise<BookResponseDTO[]> {
       views: book.views,
       likes: book.likes,
       uploadedAt: book.uploadedAt,
+      createdBy: book.createdBy,
     }));
 
     return formattedBooks;
@@ -62,6 +132,36 @@ export async function getAllBooks(): Promise<BookResponseDTO[]> {
     throw new Error("Error fetching books: " + error);
   }
 }
+
+export const getMyBooks = async (
+  userId: string
+): Promise<BookResponseDTO[]> => {
+  try {
+    await connectToDatabase();
+    console.log(userId);
+    const books = await Book.find({ createdBy: userId }).lean();
+
+    const formattedBooks: BookResponseDTO[] = books.map((book: any) => ({
+      _id: book._id,
+      title: book.title,
+      author: book.author,
+      categories: book.categories,
+      description: book.description,
+      coverImage: book.coverImage,
+      fileURL: book.fileURL,
+      fileType: book.fileType,
+      views: book.views,
+      likes: book.likes,
+      uploadedAt: book.uploadedAt,
+      createdBy: book.createdBy,
+    }));
+
+    return formattedBooks;
+  } catch (error) {
+    console.error("❌ Error fetching user's books:", error);
+    throw new Error("Unable to fetch user's books");
+  }
+};
 
 export async function getBookDetail(bookId: string) {
   await connectToDatabase();
@@ -91,6 +191,7 @@ export async function getBookDetail(bookId: string) {
       views: bookDetail.views + 1, // Return updated view count
       likes: bookDetail.likes,
       uploadedAt: bookDetail.uploadedAt,
+
       chapters: totalChapters,
     },
   };

@@ -12,6 +12,7 @@ export interface IBook extends Document, IAudit {
   views: number;
   likes: number;
   uploadedAt: Date;
+  createdBy: Schema.Types.ObjectId;
 }
 
 const BookSchema = new Schema<IBook>({
@@ -27,6 +28,7 @@ const BookSchema = new Schema<IBook>({
   views: { type: Number, default: 0 },
   likes: { type: Number, default: 0 },
   uploadedAt: { type: Date, default: Date.now },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 
 const Book = models.Book || model("Book", BookSchema);
