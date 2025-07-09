@@ -19,6 +19,7 @@ export interface CreateBookDTO {
   coverImage: string;
   fileURL: string;
   fileType: "EPUB" | "PDF";
+  createdBy: string;
 }
 
 export interface BookResponseDTO {
@@ -33,6 +34,7 @@ export interface BookResponseDTO {
   views: number;
   likes: number;
   uploadedAt: Date;
+  createdBy: string;
 }
 
 export interface BookmarkDTO {

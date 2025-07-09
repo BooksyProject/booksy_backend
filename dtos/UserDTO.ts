@@ -27,3 +27,10 @@ export interface UserLoginDTO {
   phoneNumber: string;
   password: string;
 }
+
+export interface UserBasicInfo {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+}
