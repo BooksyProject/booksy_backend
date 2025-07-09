@@ -17,13 +17,15 @@ export default async function handler(
     switch (req.method) {
       case "POST":
         try {
-          const { chapterId, position, note } = req.body;
+          const { chapterId, position, note, index } = req.body;
+
           const result = await addBookmark(
             userId as string,
             bookId as string,
             chapterId,
             position,
-            note
+            note,
+            index
           );
 
           if (!result.success) {

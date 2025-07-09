@@ -429,7 +429,8 @@ export async function addBookmark(
   bookId: string,
   chapterId: string,
   position: number,
-  note?: string
+  note?: string,
+  index?: number
 ): Promise<ReadingProgressResponse> {
   try {
     await connectToDatabase();
@@ -448,6 +449,8 @@ export async function addBookmark(
             chapterId,
             position,
             note,
+            index,
+        
           },
         },
         $set: { lastReadAt: new Date() },
