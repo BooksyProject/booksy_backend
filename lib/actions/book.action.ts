@@ -11,6 +11,7 @@ import corsMiddleware from "@/middleware/auth-middleware";
 import { NextApiRequest, NextApiResponse } from "next";
 import path from "path";
 import fs from "fs";
+import UserDownload from "@/database/download.model";
 
 export async function createBook(params: CreateBookDTO): Promise<BookDTO> {
   try {
@@ -412,3 +413,108 @@ export const getLikedBooks = async (
     throw new Error("Unable to fetch liked books");
   }
 };
+
+// Thêm hàm mới cho chức năng offline
+export async function prepareOfflineReading(bookId: string, userId: string) {
+  await connectToDatabase();
+
+  // 1. Kiểm tra sách có tồn tại không
+  const book = await Book.findById(bookId);
+  if (!book) {
+    throw new Error("Book not found");
+  }
+
+  // 2. Kiểm tra xem user đã tải sách này chưa
+  const existingDownload = await UserDownload.findOne({ userId, bookId });
+  if (existingDownload && existingDownload.status === "COMPLETED") {
+    return {
+      status: "ALREADY_DOWNLOADED",
+      book,
+      downloadRecord: existingDownload,
+    };
+  }
+
+  // 3. Tạo bản ghi download mới hoặc cập nhật bản ghi cũ
+  let downloadRecord;
+  if (existingDownload) {
+    downloadRecord = await UserDownload.findByIdAndUpdate(
+      existingDownload._id,
+      {
+        status: "DOWNLOADING",
+        progress: 0,
+        lastAccessedAt: new Date(),
+      },
+      { new: true }
+    );
+  } else {
+    downloadRecord = await UserDownload.create({
+      userId,
+      bookId,
+      status: "DOWNLOADING",
+      progress: 0,
+      downloadSize: 0, // Sẽ cập nhật sau khi tải xong
+    });
+  }
+
+  // 4. Trả về thông tin để client bắt đầu tải
+  return {
+    status: "READY_TO_DOWNLOAD",
+    book,
+    downloadRecord,
+  };
+}
+
+export async function updateDownloadProgress(
+  downloadId: string,
+  progress: number,
+  status: "DOWNLOADING" | "COMPLETED" | "FAILED",
+  downloadSize?: number
+) {
+  await connectToDatabase();
+
+  const updateData: any = {
+    progress,
+    status,
+    lastAccessedAt: new Date(),
+  };
+
+  if (downloadSize) {
+    updateData.downloadSize = downloadSize;
+  }
+
+  if (status === "FAILED") {
+    updateData.errorMessage = "Download failed";
+  }
+
+  const updatedDownload = await UserDownload.findByIdAndUpdate(
+    downloadId,
+    updateData,
+    { new: true }
+  );
+
+  return updatedDownload;
+}
+
+export async function getDownloadedBooks(userId: string) {
+  await connectToDatabase();
+
+  const downloads = await UserDownload.find({
+    userId,
+    status: "COMPLETED",
+  }).populate("bookId");
+
+  return downloads.map((d) => d.bookId);
+}
+
+export async function deleteDownloadedBook(userId: string, bookId: string) {
+  await connectToDatabase();
+
+  // Cập nhật trạng thái thay vì xóa để giữ lịch sử
+  const result = await UserDownload.findOneAndUpdate(
+    { userId, bookId },
+    { status: "DELETED" },
+    { new: true }
+  );
+
+  return result;
+}
